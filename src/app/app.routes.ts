@@ -21,11 +21,11 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: '/players',
+    redirectTo: '/lineup',
     pathMatch: 'full'
   },
   {
     path: '**',
-    redirectTo: '/players'
+    redirectTo: '/lineup'
   }
 ];
