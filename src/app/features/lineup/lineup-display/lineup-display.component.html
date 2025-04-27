@@ -1,0 +1,201 @@
+<div *ngIf="currentLineup(); else noLineup" class="space-y-3">
+  <div class="flex items-center justify-center mt-4 print:hidden">
+    <label for="editModeToggleMinimal" class="flex items-center cursor-pointer">
+      <div class="relative">
+        <input
+          id="editModeToggleMinimal"
+          type="checkbox"
+          class="sr-only peer"
+          [checked]="isEditModeEnabled()"
+          (change)="toggleEditMode()"
+        />
+        <div
+          class="block w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-600 transition-colors peer-checked:bg-blue-500 dark:peer-checked:bg-blue-700"
+        ></div>
+        <div
+          class="dot absolute left-1 top-1 w-6 h-6 rounded-full bg-white transition peer-checked:translate-x-full"
+        ></div>
+      </div>
+      <div class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+        Bearbeitungsmodus {{ isEditModeEnabled() ? 'an' : 'aus' }}
+      </div>
+    </label>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-3 shadow">
+    <div *ngFor="let row of displayRows(); trackBy: trackByRowKey"
+         class="flex items-center py-1 min-h-[34px] border-b last:border-b-0 border-gray-100 dark:border-gray-700/50">
+      <div cdkDropList
+           [id]="row.setsLabel"
+           [cdkDropListData]="row.setsLabel"
+           (cdkDropListDropped)="onDropRow($event)"
+           [cdkDropListConnectedTo]="getAllSetListIds()"
+           class="w-16 pr-2 flex-shrink-0 font-medium text-xs text-right text-gray-600 dark:text-gray-300">
+        <span
+          cdkDrag
+          [cdkDragDisabled]="!isEditModeEnabled()"
+          [cdkDragData]="row.setsLabel">
+        {{ row.setsLabel }}
+          </span>
+      </div>
+      <div class="flex items-center justify-center flex-grow space-x-2">
+        <ng-container *ngIf="row.type === 'single' || row.type === 'gw'">
+          <div
+            cdkDropList
+            [id]="getDropListId(row.setNumber, row.type === 'gw' ? 'gw' : 'single')"
+            [cdkDropListData]="{ setNumber: row.setNumber, position: row.type === 'gw' ? 'gw' : 'single' }"
+            (cdkDropListDropped)="onDrop($event)"
+            [cdkDropListConnectedTo]="getAllSlotListIds()"
+            class="p-1 w-1/2 rounded border text-center transition-colors duration-150 ease-in-out"
+            [class.border-dashed]="!row.slot?.assignedPlayerId"
+            [class.border-gray-300]="!row.slot?.assignedPlayerId"
+            [class.dark:border-gray-600]="!row.slot?.assignedPlayerId"
+            [class.border-solid]="row.slot?.assignedPlayerId"
+            [style.borderColor]="row.slot?.assignedPlayerId ? getPlayerColor(row.slot!.assignedPlayerId) : '#D1D5DB'"
+            [style.backgroundColor]="getPlayerColor(row.slot?.assignedPlayerId ?? null)"
+            [class.hover:border-gray-400]="!row.slot?.assignedPlayerId && isEditModeEnabled()"
+            [class.dark:hover:border-gray-500]="!row.slot?.assignedPlayerId && isEditModeEnabled()"
+            [class.eligible-drop-zone]="isCurrentlyDragging && isDropTargetEligible(row.setNumber)"
+            [class.ineligible-drop-zone]="isCurrentlyDragging && !isDropTargetEligible(row.setNumber)"
+          >
+            <span
+              cdkDrag
+              (cdkDragStarted)="onDragStarted($event)"
+              (cdkDragReleased)="onDragReleased()"
+              [cdkDragDisabled]="!row.slot?.assignedPlayerId || !isEditModeEnabled()"
+              [cdkDragData]="row.slot?.assignedPlayerId ? { playerId: row.slot!.assignedPlayerId, sourceSlot: { setNumber: row.setNumber, position: row.type === 'gw' ? 'gw' : 'single' } } : null"
+              (click)="onSlotClick(row.setNumber, row.type === 'gw' ? 'gw' : 'single')"
+              [title]="getPlayerName(row.slot?.assignedPlayerId ?? null)"
+              class="block truncate px-0.5 font-medium text-xl"
+              [class.text-gray-50]="row.slot?.assignedPlayerId"
+              [class.text-gray-400]="!row.slot?.assignedPlayerId"
+              [class.dark:text-gray-500]="!row.slot?.assignedPlayerId"
+              [class.cursor-pointer]="!row.slot?.assignedPlayerId && isEditModeEnabled()"
+              [class.cursor-move]="row.slot?.assignedPlayerId && isEditModeEnabled()"
+              [class.cursor-not-allowed]="!isEditModeEnabled()"
+            >
+              <b>{{ getPlayerName(row.slot?.assignedPlayerId ?? (row.type === 'gw' ? 'Leerer Slot' : 'Leerer Slot')) }}</b>
+            </span>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="row.type === 'double'">
+          <div
+            cdkDropList
+            [id]="getDropListId(row.setNumbers[0], 'striker')"
+            [cdkDropListData]="{ setNumber: row.setNumbers[0], position: 'striker' }"
+            (cdkDropListDropped)="onDrop($event)"
+            [cdkDropListConnectedTo]="getAllSlotListIds()"
+            class="p-1 w-1/2 rounded border text-center transition-colors duration-150 ease-in-out"
+            [class.border-dashed]="!row.strikerSlot?.assignedPlayerId"
+            [class.border-gray-300]="!row.strikerSlot?.assignedPlayerId"
+            [class.dark:border-gray-600]="!row.strikerSlot?.assignedPlayerId"
+            [class.border-solid]="row.strikerSlot?.assignedPlayerId"
+            [style.borderColor]="row.strikerSlot?.assignedPlayerId ? getPlayerColor(row.strikerSlot!.assignedPlayerId) : '#D1D5DB'"
+            [style.backgroundColor]="getPlayerColor(row.strikerSlot?.assignedPlayerId ?? null)"
+            [class.hover:border-gray-400]="!row.strikerSlot?.assignedPlayerId && isEditModeEnabled()"
+            [class.dark:hover:border-gray-500]="!row.strikerSlot?.assignedPlayerId && isEditModeEnabled()"
+            [class.eligible-drop-zone]="isCurrentlyDragging && isDropTargetEligible(row.setNumbers[0])"
+            [class.ineligible-drop-zone]="isCurrentlyDragging && !isDropTargetEligible(row.setNumbers[0])"
+          >
+            <span
+              cdkDrag
+              (cdkDragStarted)="onDragStarted($event)"
+              (cdkDragReleased)="onDragReleased()"
+              [cdkDragDisabled]="!row.strikerSlot?.assignedPlayerId || !isEditModeEnabled()"
+              [cdkDragData]="row.strikerSlot?.assignedPlayerId ? { playerId: row.strikerSlot!.assignedPlayerId, sourceSlot: { setNumber: row.setNumbers[0], position: 'striker' } } : null"
+              (click)="onSlotClick(row.setNumbers[0], 'striker')"
+              [title]="getPlayerName(row.strikerSlot?.assignedPlayerId ?? null)"
+              class="block truncate px-0.5 font-medium text-xl"
+              [class.text-gray-50]="row.strikerSlot?.assignedPlayerId"
+              [class.text-gray-400]="!row.strikerSlot?.assignedPlayerId"
+              [class.dark:text-gray-500]="!row.strikerSlot?.assignedPlayerId"
+              [class.cursor-pointer]="!row.strikerSlot?.assignedPlayerId && isEditModeEnabled()"
+              [class.cursor-move]="row.strikerSlot?.assignedPlayerId && isEditModeEnabled()"
+              [class.cursor-not-allowed]="!isEditModeEnabled()"
+            >
+              <b>{{ getPlayerName(row.strikerSlot?.assignedPlayerId ?? 'Stürmer') }}</b>
+            </span>
+          </div>
+          <div
+            cdkDropList
+            [id]="getDropListId(row.setNumbers[1], 'goalie')"
+            [cdkDropListData]="{ setNumber: row.setNumbers[1], position: 'goalie' }"
+            (cdkDropListDropped)="onDrop($event)"
+            [cdkDropListConnectedTo]="getAllSlotListIds()"
+            class="p-1 w-1/2 rounded border text-center transition-colors duration-150 ease-in-out"
+            [class.border-dashed]="!row.goalieSlot?.assignedPlayerId"
+            [class.border-gray-300]="!row.goalieSlot?.assignedPlayerId"
+            [class.dark:border-gray-600]="!row.goalieSlot?.assignedPlayerId"
+            [class.border-solid]="row.goalieSlot?.assignedPlayerId"
+            [style.borderColor]="row.goalieSlot?.assignedPlayerId ? getPlayerColor(row.goalieSlot!.assignedPlayerId) : '#D1D5DB'"
+            [style.backgroundColor]="getPlayerColor(row.goalieSlot?.assignedPlayerId ?? null)"
+            [class.hover:border-gray-400]="!row.goalieSlot?.assignedPlayerId && isEditModeEnabled()"
+            [class.dark:hover:border-gray-500]="!row.goalieSlot?.assignedPlayerId && isEditModeEnabled()"
+            [class.eligible-drop-zone]="isCurrentlyDragging && isDropTargetEligible(row.setNumbers[1])"
+            [class.ineligible-drop-zone]="isCurrentlyDragging && !isDropTargetEligible(row.setNumbers[1])"
+          >
+            <span
+              cdkDrag
+              (cdkDragStarted)="onDragStarted($event)"
+              (cdkDragReleased)="onDragReleased()"
+              [cdkDragDisabled]="!row.goalieSlot?.assignedPlayerId || !isEditModeEnabled()"
+              [cdkDragData]="row.goalieSlot?.assignedPlayerId ? { playerId: row.goalieSlot!.assignedPlayerId, sourceSlot: { setNumber: row.setNumbers[1], position: 'goalie' } } : null"
+              (click)="onSlotClick(row.setNumbers[1], 'goalie')"
+              [title]="getPlayerName(row.goalieSlot?.assignedPlayerId ?? null)"
+              class="block truncate px-0.5 font-medium text-xl"
+              [class.text-gray-50]="row.goalieSlot?.assignedPlayerId"
+              [class.text-gray-400]="!row.goalieSlot?.assignedPlayerId"
+              [class.dark:text-gray-500]="!row.goalieSlot?.assignedPlayerId"
+              [class.cursor-pointer]="!row.goalieSlot?.assignedPlayerId && isEditModeEnabled()"
+              [class.cursor-move]="row.goalieSlot?.assignedPlayerId && isEditModeEnabled()"
+              [class.cursor-not-allowed]="!isEditModeEnabled()"
+            >
+              <b>{{ getPlayerName(row.goalieSlot?.assignedPlayerId ?? 'Torwart') }}</b>
+            </span>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="isEditModeEnabled()" class="bg-white dark:bg-gray-800 rounded-lg p-2 shadow print:hidden">
+    <div class="flex flex-wrap items-center justify-center sm:justify-between gap-2">
+      <div class="flex flex-wrap w-full justify-center gap-1.5">
+        <button
+          type="button"
+          (click)="newSetup()"
+          class="px-3 py-1.5 bg-gray-600 text-white text-xl font-medium flex items-center space-x-1 rounded shadow-sm transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-500"
+        >
+          <span>⬅️ Zurück</span>
+        </button>
+        <button
+          type="button"
+          (click)="generateRandom()"
+          class="px-3 py-1.5 bg-purple-600 text-white text-xl font-medium flex items-center space-x-1 rounded shadow-sm transition-colors hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-purple-500"
+        >
+          <span>🎲 Zufall</span>
+        </button>
+        <button
+          type="button"
+          (click)="clearLineup()"
+          class="px-3 py-1.5 bg-yellow-500 text-white text-xl font-medium flex items-center space-x-1 rounded shadow-sm transition-colors hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-yellow-400"
+        >
+          <span>🗑 Leeren</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #noLineup>
+  <div class="flex flex-col items-center justify-center text-center p-6 h-full text-xl bg-white dark:bg-gray-800 rounded-lg shadow">
+    <p class="mb-4 text-9xl text-gray-600 dark:text-gray-300">📝</p>
+    <p class="mb-4 text-gray-600 dark:text-gray-300">Keine aktive Aufstellung gefunden.</p>
+    <a
+      routerLink="/lineup/setup"
+      class="inline-flex items-center mt-2 px-5 py-2.5 bg-blue-600 text-white text-xl font-medium rounded-md shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    >
+      ➕ Neue Aufstellung erstellen
+    </a>
+  </div>
+</ng-template>

@@ -1,1 +1,49 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+body {
+  @apply bg-gray-50 dark:bg-gray-900 antialiased;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-700 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-500 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-400;
+}
+
+.cdk-drag-preview {
+  @apply shadow-xl rounded-md box-border;
+}
+
+.cdk-drag-placeholder {
+  @apply bg-yellow-100 dark:bg-yellow-800 border-yellow-400 border-dashed opacity-50 transition-opacity duration-200;
+  min-height: 40px;
+}
+
+.eligible-drop-zone {
+  background-color: #dcfce7;
+  border: 2px solid #22c55e;
+  transform: scale(1.05);
+  transition: all 100ms ease-in-out;
+}
+
+@media (prefers-color-scheme: dark) {
+  .eligible-drop-zone {
+    background-color: rgba(20, 83, 45, 0.7);
+    border-color: #4ade80;
+  }
+}
+
+.ineligible-drop-zone {
+  opacity: 0.4;
+  filter: grayscale(100%);
+}
