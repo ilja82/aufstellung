@@ -280,8 +280,6 @@ export class LineupDisplayComponent implements OnInit {
   }
 
   onDropRow(event: CdkDragDrop<any>) {
-    console.log(event);
-
     if (!this.isEditModeEnabled()) return;
 
     const targetContainerId = event.container.id;
@@ -299,41 +297,36 @@ export class LineupDisplayComponent implements OnInit {
     const sourceDisplayRow = this.displayRows().find(row => row.setsLabel === sourceSetLabel);
     const targetDisplayRow = this.displayRows().find(row => row.setsLabel === targetSetLabel);
 
-    if ((sourceDisplayRow?.type !== targetDisplayRow?.type)) {
-      console.error("Cannot move between different types of sets!");
+    const isSourceSingleOrGw = sourceDisplayRow?.type === 'single' || sourceDisplayRow?.type === 'gw';
+    const isTargetSingleOrGw = targetDisplayRow?.type === 'single' || targetDisplayRow?.type === 'gw';
+    const isSourceDouble = sourceDisplayRow?.type === 'double';
+    const isTargetDouble = targetDisplayRow?.type === 'double';
+
+    if ((isSourceSingleOrGw && isTargetDouble) || (isSourceDouble && isTargetSingleOrGw)) {
+      console.error("Cannot move between single/gw and double types of sets!");
       return;
     }
 
     const lineup = this.currentLineup();
-    if (sourceDisplayRow?.type === 'single' && targetDisplayRow?.type === 'single') {
-      const sourcePlayer = lineup?.slots.find(s => s.setNumber === sourceDisplayRow.setNumber && s.position === 'single')?.assignedPlayerId;
-      const targetPlayer = lineup?.slots.find(s => s.setNumber === targetDisplayRow.setNumber && s.position === 'single')?.assignedPlayerId;
-      if (sourcePlayer && targetPlayer) {
-        this.lineupService.assignPlayerToSlot(sourceDisplayRow.setNumber, targetPlayer);
-        this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumber, sourcePlayer);
-      }
+
+    if (isSourceSingleOrGw && isTargetSingleOrGw) {
+      const sourcePlayer = lineup?.slots.find(s => s.setNumber === sourceDisplayRow.setNumber)?.assignedPlayerId ?? null;
+      const targetPlayer = lineup?.slots.find(s => s.setNumber === targetDisplayRow.setNumber)?.assignedPlayerId ?? null;
+      this.lineupService.assignPlayerToSlot(sourceDisplayRow.setNumber, targetPlayer);
+      this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumber, sourcePlayer);
     }
 
     if (sourceDisplayRow?.type === 'double' && targetDisplayRow?.type === 'double') {
-      const sourceStriker = lineup?.slots.find(s => s.setNumber === sourceDisplayRow.setNumbers[0] && s.position === 'striker')?.assignedPlayerId;
-      const sourceGoalie = lineup?.slots.find(s => s.setNumber === sourceDisplayRow.setNumbers[1] && s.position === 'goalie')?.assignedPlayerId;
-      const targetStriker = lineup?.slots.find(s => s.setNumber === targetDisplayRow.setNumbers[0] && s.position === 'striker')?.assignedPlayerId;
-      const targetGoalie = lineup?.slots.find(s => s.setNumber === targetDisplayRow.setNumbers[1] && s.position === 'goalie')?.assignedPlayerId;
-      if (sourceStriker && sourceGoalie && targetStriker && targetGoalie) {
-        this.lineupService.assignPlayerToSlot(sourceDisplayRow.setNumbers[0], targetStriker);
-        this.lineupService.assignPlayerToSlot(sourceDisplayRow.setNumbers[1], targetGoalie);
-        this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumbers[0], sourceStriker);
-        this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumbers[1], sourceGoalie);
-      }
+      const sourceStriker = lineup?.slots.find(s => s.setNumber === sourceDisplayRow.setNumbers[0] && s.position === 'striker')?.assignedPlayerId ?? null;
+      const sourceGoalie = lineup?.slots.find(s => s.setNumber === sourceDisplayRow.setNumbers[1] && s.position === 'goalie')?.assignedPlayerId ?? null;
+      const targetStriker = lineup?.slots.find(s => s.setNumber === targetDisplayRow.setNumbers[0] && s.position === 'striker')?.assignedPlayerId ?? null;
+      const targetGoalie = lineup?.slots.find(s => s.setNumber === targetDisplayRow.setNumbers[1] && s.position === 'goalie')?.assignedPlayerId ?? null;
+      this.lineupService.assignPlayerToSlot(sourceDisplayRow.setNumbers[0], targetStriker);
+      this.lineupService.assignPlayerToSlot(sourceDisplayRow.setNumbers[1], targetGoalie);
+      this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumbers[0], sourceStriker);
+      this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumbers[1], sourceGoalie);
     }
-    if (sourceDisplayRow?.type === 'gw' && targetDisplayRow?.type === 'gw') {
-      const sourcePlayer = lineup?.slots.find(s => s.setNumber === sourceDisplayRow.setNumber && s.position === 'gw')?.assignedPlayerId;
-      const targetPlayer = lineup?.slots.find(s => s.setNumber === targetDisplayRow.setNumber && s.position === 'gw')?.assignedPlayerId;
-      if (sourcePlayer && targetPlayer) {
-        this.lineupService.assignPlayerToSlot(sourceDisplayRow.setNumber, targetPlayer);
-        this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumber, sourcePlayer);
-      }
-    }
+
   }
 
   generateRandom(): void {
