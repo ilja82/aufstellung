@@ -35,10 +35,10 @@ jobs:
         run: npm run build -- --configuration production --base-href /${{ github.event.repository.name }}/
 
       - name: Add .nojekyll file
-        run: touch ./dist/aufstellung/.nojekyll
+        run: touch ./dist/aufstellung/browser/.nojekyll
 
       - name: Copy index.html to 404.html
-        run: cp ./dist/aufstellung/index.html ./dist/aufstellung/404.html
+        run: cp ./dist/aufstellung/browser/index.html ./dist/aufstellung/browser/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -46,7 +46,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist/aufstellung'
+          path: './dist/aufstellung/browser'
 
   deploy:
     environment:
