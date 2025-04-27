@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "tfvhh-line-up": {
+    "aufstellung": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/tfvhh-line-up",
+            "outputPath": "dist/aufstellung",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -50,7 +50,8 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json"
             },
             "development": {
               "optimization": false,
@@ -64,10 +65,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "tfvhh-line-up:build:production"
+              "buildTarget": "aufstellung:build:production"
             },
             "development": {
-              "buildTarget": "tfvhh-line-up:build:development"
+              "buildTarget": "aufstellung:build:development"
             }
           },
           "defaultConfiguration": "development"
