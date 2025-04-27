@@ -115,7 +115,13 @@
         <div *ngIf="availablePlayers().length === 0" class="
           text-sm text-gray-500 dark:text-gray-400 italic
         ">
-          Keine Spieler vorhanden. Bitte füge zuerst Spieler hinzu.
+          <a
+            routerLink="/players"
+            routerLinkActive="text-blue-600 dark:text-blue-400"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Keine Spieler vorhanden. Füge zuerst Spieler hinzu. 🔗
+          </a>
         </div>
         <div *ngFor="let player of availablePlayers(); let i = index" class="
           flex items-center

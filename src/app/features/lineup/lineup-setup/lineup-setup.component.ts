@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit, Signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Router} from '@angular/router';
+import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {PlayerService} from '../../player/player.service';
 import {LineupService} from '../lineup.service';
 import {Player} from '../../../models/player.model';
@@ -12,7 +12,7 @@ import {startWith, takeUntil} from 'rxjs/operators';
 @Component({
   selector: 'app-lineup-setup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, RouterLinkActive],
   templateUrl: './lineup-setup.component.html',
   styleUrls: ['./lineup-setup.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
