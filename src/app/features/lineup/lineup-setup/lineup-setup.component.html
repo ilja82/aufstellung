@@ -112,15 +112,13 @@
         border border-gray-300 dark:border-gray-600
         rounded-md
       ">
-        <div *ngIf="availablePlayers().length === 0" class="
-          text-sm text-gray-500 dark:text-gray-400 italic
-        ">
+        <div *ngIf="availablePlayers().length === 0" class="text-sm text-gray-500 dark:text-gray-400">
           <a
             routerLink="/players"
             routerLinkActive="text-blue-600 dark:text-blue-400"
             [routerLinkActiveOptions]="{ exact: true }"
           >
-            Keine Spieler vorhanden. Füge zuerst Spieler hinzu. 🔗
+            ➡️ Füge zuerst Spieler hinzu.
           </a>
         </div>
         <div *ngFor="let player of availablePlayers(); let i = index" class="

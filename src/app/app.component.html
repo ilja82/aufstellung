@@ -24,9 +24,24 @@
         print:hidden
       "
     >
-      <div class="flex justify-center items-center space-x-2">
-        <img src="icons/icon-144x144.png" alt="App Icon" class="h-6 w-6">
-        <h1 class="text-lg font-semibold">Aufstellungstool</h1>
+      <div class="flex justify-between items-center">
+        <div class="flex justify-center items-center space-x-2 flex-grow">
+          <img src="icons/icon-144x144.png" alt="App Icon" class="h-6 w-6">
+          <h1 class="text-lg font-semibold">Aufstellungstool</h1>
+        </div>
+        <button
+          *ngIf="showInstallButton()"
+          (click)="installPWA()"
+          class="
+                 ml-auto px-3 py-1
+                 bg-white/20 hover:bg-white/30
+                 text-white text-xs font-medium
+                 rounded shadow
+                 transition-colors
+                "
+        >
+          App installieren
+        </button>
       </div>
     </header>
 
