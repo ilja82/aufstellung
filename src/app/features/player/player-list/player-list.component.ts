@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, inject, signal, Signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, signal, Signal, WritableSignal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {PlayerService} from '../player.service';
 import {Player} from '../../../models/player.model';
@@ -18,6 +18,7 @@ export class PlayerListComponent {
   private readonly fb = inject(FormBuilder);
 
   editingState = signal<string | null>(null);
+  playerToDelete: WritableSignal<Player | null> = signal(null);
 
   players: Signal<Player[]> = this.playerService.players;
   playerCount: Signal<number> = this.playerService.playerCount;
@@ -82,10 +83,22 @@ export class PlayerListComponent {
     this.playerForm.reset();
   }
 
-  removePlayer(id: string): void {
-    this.playerService.removePlayer(id);
-    if (this.editingState() === id) {
-      this.cancelEdit();
+  confirmDelete(player: Player): void {
+    this.playerToDelete.set(player);
+  }
+
+  deletePlayer(): void {
+    const player = this.playerToDelete();
+    if (player) {
+      this.playerService.removePlayer(player.id);
+      this.playerToDelete.set(null);
+      if (this.editingState() === player.id) {
+        this.cancelEdit();
+      }
     }
+  }
+
+  cancelDelete(): void {
+    this.playerToDelete.set(null);
   }
 }

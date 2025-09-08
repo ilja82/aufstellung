@@ -61,8 +61,9 @@
   >
     <div class="flex h-full justify-around items-center">
       <a
-        routerLink="/lineup"
+        routerLink="/lineups"
         routerLinkActive="text-blue-600 dark:text-blue-400"
+        [routerLinkActiveOptions]="{ exact: true }"
         class="
             flex flex-col items-center justify-center
             p-2
@@ -72,8 +73,8 @@
             transition-colors
           "
       >
-        📝
-        <span class="text-xl font-medium">Aufstellung</span>
+        📋
+        <span class="text-xl font-medium">Aufstellungen</span>
       </a>
       <a
         routerLink="/players"

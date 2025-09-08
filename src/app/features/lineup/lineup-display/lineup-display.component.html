@@ -163,13 +163,6 @@
       <div class="flex flex-wrap w-full justify-center gap-1.5">
         <button
           type="button"
-          (click)="newSetup()"
-          class="px-3 py-1.5 bg-gray-600 text-white text-xl font-medium flex items-center space-x-1 rounded shadow-sm transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-500"
-        >
-          <span>⬅️ Zurück</span>
-        </button>
-        <button
-          type="button"
           (click)="generateRandom()"
           class="px-3 py-1.5 bg-purple-600 text-white text-xl font-medium flex items-center space-x-1 rounded shadow-sm transition-colors hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-purple-500"
         >
@@ -189,13 +182,13 @@
 
 <ng-template #noLineup>
   <div class="flex flex-col items-center justify-center text-center p-6 h-full text-xl bg-white dark:bg-gray-800 rounded-lg shadow">
-    <p class="mb-4 text-9xl text-gray-600 dark:text-gray-300">📝</p>
+    <p class="mb-4 text-9xl text-gray-600 dark:text-gray-300">📋</p>
     <p class="mb-4 text-gray-600 dark:text-gray-300">Keine aktive Aufstellung gefunden.</p>
     <a
-      routerLink="/lineup/setup"
+      routerLink="/lineups"
       class="inline-flex items-center mt-2 px-5 py-2.5 bg-blue-600 text-white text-xl font-medium rounded-md shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
     >
-      ➕ Neue Aufstellung erstellen
+      📋 Zu den Aufstellungen
     </a>
   </div>
 </ng-template>

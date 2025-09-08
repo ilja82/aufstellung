@@ -81,18 +81,7 @@
               bg-red-100 dark:bg-red-900
             "
           >
-            Goalie War
-          </span>
-          <span
-            *ngIf="player.isGoalie"
-            class="
-              px-1 py-0.5 rounded
-              text-xs font-medium
-              text-green-800 dark:text-green-200
-              bg-green-100 dark:bg-green-900
-            "
-          >
-            Torwart
+            GW
           </span>
           <span
             *ngIf="player.isStriker"
@@ -103,18 +92,18 @@
               bg-yellow-100 dark:bg-yellow-900
             "
           >
-            Stürmer
+            S
           </span>
           <span
-            *ngIf="player.likesSingles"
+            *ngIf="player.isGoalie"
             class="
               px-1 py-0.5 rounded
               text-xs font-medium
-              text-blue-800 dark:text-blue-200
-              bg-blue-100 dark:bg-blue-900
+              text-green-800 dark:text-green-200
+              bg-green-100 dark:bg-green-900
             "
           >
-            Einzel
+            T
           </span>
           <span
             *ngIf="player.likesDoubles"
@@ -125,7 +114,18 @@
               bg-purple-100 dark:bg-purple-900
             "
           >
-            Doppel
+            D
+          </span>
+          <span
+            *ngIf="player.likesSingles"
+            class="
+              px-1 py-0.5 rounded
+              text-xs font-medium
+              text-blue-800 dark:text-blue-200
+              bg-blue-100 dark:bg-blue-900
+            "
+          >
+            E
           </span>
         </span>
       </button>

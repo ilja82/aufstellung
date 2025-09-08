@@ -50,13 +50,6 @@ export class LineupService {
     this._saveLineupToLocalStorage();
   }
 
-  public clearCurrentLineup(): void {
-    this.#currentLineup.set(null);
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(LINEUP_STORAGE_KEY);
-    }
-  }
-
   public isMoveEligible(currentSlots: LineupSlot[], targetSetNumber: number, sourceSetNumber?: number, playerId?: string): boolean {
     const workingSlots = currentSlots.map(slot => ({...slot}));
 

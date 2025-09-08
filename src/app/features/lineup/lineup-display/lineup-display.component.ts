@@ -11,14 +11,15 @@ import {
   WritableSignal
 } from '@angular/core';
 import {CommonModule, isPlatformBrowser} from '@angular/common';
-import {Router, RouterModule} from '@angular/router';
 import {Dialog, DialogModule} from '@angular/cdk/dialog';
 import {CdkDragDrop, CdkDragStart, DragDropModule} from '@angular/cdk/drag-drop';
 
 import {LineupService} from '../lineup.service';
 import {PlayerService} from '../../player/player.service';
+import {SavedLineupService} from '../saved-lineup.service';
 import {Lineup, LineupSlot, PositionType} from '../../../models/lineup.model';
 import {Player} from '../../../models/player.model';
+import {SavedLineup} from '../../../models/saved-lineup.model';
 import {PlayerSelectionData, PlayerSelectionModalComponent} from '../../shared/player-selection-modal/player-selection-modal.component';
 
 interface BaseDisplayRow {
@@ -54,7 +55,7 @@ const EDIT_MODE_STORAGE_KEY = 'lineup_edit_mode';
 @Component({
   selector: 'app-lineup-display',
   standalone: true,
-  imports: [CommonModule, RouterModule, DialogModule, DragDropModule],
+  imports: [CommonModule, DialogModule, DragDropModule],
   templateUrl: './lineup-display.component.html',
   styleUrls: ['./lineup-display.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -62,7 +63,7 @@ const EDIT_MODE_STORAGE_KEY = 'lineup_edit_mode';
 export class LineupDisplayComponent implements OnInit {
   private readonly lineupService = inject(LineupService);
   private readonly playerService = inject(PlayerService);
-  private readonly router = inject(Router);
+  private readonly savedLineupService = inject(SavedLineupService);
   private readonly dialog = inject(Dialog);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
   private readonly platformId = inject(PLATFORM_ID);
@@ -73,6 +74,8 @@ export class LineupDisplayComponent implements OnInit {
   sourceSetNumber: number | undefined = undefined;
 
   currentLineup: Signal<Lineup | null> = this.lineupService.currentLineup;
+  currentSavedLineup: Signal<SavedLineup | null> = this.savedLineupService.currentlyOpenLineup;
+
   private readonly allPlayersMap: Signal<Map<string, Player>> = computed(() => {
     const map = new Map<string, Player>();
     this.playerService.players().forEach(player => map.set(player.id, player));
@@ -137,6 +140,14 @@ export class LineupDisplayComponent implements OnInit {
     }
   }
 
+  private autoSaveCurrentLineup(): void {
+    const lineup = this.currentLineup();
+    const currentSaved = this.currentSavedLineup();
+
+    if (lineup && currentSaved) {
+      this.savedLineupService.saveLineup(lineup, currentSaved.name, currentSaved.id);
+    }
+  }
 
   toggleEditMode(): void {
     this.isEditModeEnabled.update(enabled => {
@@ -233,6 +244,7 @@ export class LineupDisplayComponent implements OnInit {
     dialogRef.closed.subscribe(selectedPlayerId => {
       if (selectedPlayerId !== undefined) {
         this.lineupService.assignPlayerToSlot(setNumber, selectedPlayerId);
+        this.autoSaveCurrentLineup();
       }
     });
   }
@@ -268,11 +280,13 @@ export class LineupDisplayComponent implements OnInit {
     if (canSwapPositions) {
       this.lineupService.assignPlayerToSlot(sourceSlotInfo.setNumber, targetSlotCurrentPlayerId);
       this.lineupService.assignPlayerToSlot(targetSlotInfo.setNumber, playerIdToMove);
+      this.autoSaveCurrentLineup();
     } else {
       const canMovePosition = this.lineupService.isMoveEligible(lineup.slots, targetSlotInfo.setNumber, undefined, playerIdToMove);
       if (canMovePosition) {
         this.lineupService.assignPlayerToSlot(sourceSlotInfo.setNumber, null);
         this.lineupService.assignPlayerToSlot(targetSlotInfo.setNumber, playerIdToMove);
+        this.autoSaveCurrentLineup();
       } else {
         console.warn(`Cannot swap: ${this.getPlayerName(playerIdToMove)} not eligible for target ${targetSlotInfo.setNumber}/${targetSlotInfo.position}`);
       }
@@ -314,6 +328,7 @@ export class LineupDisplayComponent implements OnInit {
       const targetPlayer = lineup?.slots.find(s => s.setNumber === targetDisplayRow.setNumber)?.assignedPlayerId ?? null;
       this.lineupService.assignPlayerToSlot(sourceDisplayRow.setNumber, targetPlayer);
       this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumber, sourcePlayer);
+      this.autoSaveCurrentLineup();
     }
 
     if (sourceDisplayRow?.type === 'double' && targetDisplayRow?.type === 'double') {
@@ -325,14 +340,15 @@ export class LineupDisplayComponent implements OnInit {
       this.lineupService.assignPlayerToSlot(sourceDisplayRow.setNumbers[1], targetGoalie);
       this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumbers[0], sourceStriker);
       this.lineupService.assignPlayerToSlot(targetDisplayRow.setNumbers[1], sourceGoalie);
+      this.autoSaveCurrentLineup();
     }
-
   }
 
   generateRandom(): void {
     if (!this.isEditModeEnabled()) return;
     try {
       this.lineupService.generateRandomAssignment();
+      this.autoSaveCurrentLineup();
     } catch (error) {
       console.error("Error:", error);
     }
@@ -341,10 +357,6 @@ export class LineupDisplayComponent implements OnInit {
   clearLineup(): void {
     if (!this.isEditModeEnabled()) return;
     this.lineupService.clearSets();
-  }
-
-  newSetup() {
-    this.lineupService.clearCurrentLineup();
-    this.router.navigate(['/lineup/setup']).then();
+    this.autoSaveCurrentLineup();
   }
 }

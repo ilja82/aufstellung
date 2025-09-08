@@ -20,12 +20,18 @@ export const routes: Routes = [
     title: 'Aktuelle Aufstellung'
   },
   {
+    path: 'lineups',
+    loadComponent: () => import('./features/shared/saved-lineups-list/saved-lineups-list.component')
+      .then(m => m.SavedLineupsListComponent),
+    title: 'Aufstellungen'
+  },
+  {
     path: '',
-    redirectTo: '/lineup',
+    redirectTo: '/lineups',
     pathMatch: 'full'
   },
   {
     path: '**',
-    redirectTo: '/lineup'
+    redirectTo: '/lineups'
   }
 ];
