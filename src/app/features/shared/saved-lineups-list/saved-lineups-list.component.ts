@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, computed, inject, PLATFORM_ID, Signal, signal, WritableSignal} from '@angular/core';
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {isPlatformBrowser} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 import {SavedLineupService} from '../../lineup/saved-lineup.service';
 import {LineupService} from '../../lineup/lineup.service';
@@ -8,7 +8,7 @@ import {SavedLineup} from '../../../models/saved-lineup.model';
 @Component({
   selector: 'app-saved-lineups-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   templateUrl: './saved-lineups-list.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

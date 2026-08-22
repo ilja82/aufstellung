@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, computed, inject, Signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {DIALOG_DATA, DialogRef} from '@angular/cdk/dialog';
 import {Player} from '../../../models/player.model';
 import {Lineup, PositionType} from '../../../models/lineup.model';
@@ -15,7 +15,7 @@ export interface PlayerSelectionData {
 @Component({
   selector: 'app-player-selection-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './player-selection-modal.component.html',
   styleUrls: ['./player-selection-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

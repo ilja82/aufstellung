@@ -26,19 +26,18 @@
       custom-scrollbar
     "
   >
-    <p
-      *ngIf="eligiblePlayers().length === 0"
+    @if (eligiblePlayers().length === 0) {
+      <p
       class="
         italic
         px-1 py-2
         text-sm
         text-gray-500 dark:text-gray-400
       "
-    >
-      Keine passenden Spieler verfügbar.
-    </p>
-
-    <ng-container *ngFor="let player of eligiblePlayers()">
+      >
+        Keine passenden Spieler verfügbar.
+      </p>
+    } @for (player of eligiblePlayers(); track player) {
       <button
         type="button"
         (click)="selectPlayer(player.id)"
@@ -63,7 +62,6 @@
         >
           {{ player.name }}
         </span>
-
         <span
           class="
             flex-shrink-0 ml-2
@@ -72,19 +70,19 @@
             text-gray-500 dark:text-gray-400
           "
         >
-          <span
-            *ngIf="player.playsGoalieWar"
+          @if (player.playsGoalieWar) {
+            <span
             class="
               px-1 py-0.5 rounded
               text-xs font-medium
               text-red-800 dark:text-red-200
               bg-red-100 dark:bg-red-900
             "
-          >
-            GW
-          </span>
+            >
+              GW
+            </span>
+          } @if (player.isStriker) {
           <span
-            *ngIf="player.isStriker"
             class="
               px-1 py-0.5 rounded
               text-xs font-medium
@@ -92,10 +90,10 @@
               bg-yellow-100 dark:bg-yellow-900
             "
           >
-            S
-          </span>
+              S
+            </span>
+        } @if (player.isGoalie) {
           <span
-            *ngIf="player.isGoalie"
             class="
               px-1 py-0.5 rounded
               text-xs font-medium
@@ -103,10 +101,10 @@
               bg-green-100 dark:bg-green-900
             "
           >
-            T
-          </span>
+              T
+            </span>
+        } @if (player.likesDoubles) {
           <span
-            *ngIf="player.likesDoubles"
             class="
               px-1 py-0.5 rounded
               text-xs font-medium
@@ -114,10 +112,10 @@
               bg-purple-100 dark:bg-purple-900
             "
           >
-            D
-          </span>
+              D
+            </span>
+        } @if (player.likesSingles) {
           <span
-            *ngIf="player.likesSingles"
             class="
               px-1 py-0.5 rounded
               text-xs font-medium
@@ -125,18 +123,19 @@
               bg-blue-100 dark:bg-blue-900
             "
           >
-            E
-          </span>
+              E
+            </span>
+        }
         </span>
       </button>
-    </ng-container>
+  }
   </div>
 
   <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
-    <button
-      *ngIf="currentAssignmentId"
-      type="button"
-      (click)="removeAssignment()"
+    @if (currentAssignmentId) {
+      <button
+        type="button"
+        (click)="removeAssignment()"
       class="
         flex justify-center items-center w-full
         px-4 py-2 rounded-md
@@ -149,9 +148,10 @@
         focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500
         focus-outline-none
       "
-    >
-      ❌ Spieler entfernen
-    </button>
+      >
+        ❌ Spieler entfernen
+      </button>
+    }
     <button
       type="button"
       (click)="cancel()"

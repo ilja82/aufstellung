@@ -112,16 +112,18 @@
         border border-gray-300 dark:border-gray-600
         rounded-md
       ">
-        <div *ngIf="availablePlayers().length === 0" class="text-sm text-gray-500 dark:text-gray-400">
-          <a
-            routerLink="/players"
-            routerLinkActive="text-blue-600 dark:text-blue-400"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            ➡️ Füge zuerst Spieler hinzu.
-          </a>
-        </div>
-        <div *ngFor="let player of availablePlayers(); let i = index" class="
+        @if (availablePlayers().length === 0) {
+          <div class="text-sm text-gray-500 dark:text-gray-400">
+            <a
+              routerLink="/players"
+              routerLinkActive="text-blue-600 dark:text-blue-400"
+              [routerLinkActiveOptions]="{ exact: true }"
+            >
+              ➡️ Füge zuerst Spieler hinzu.
+            </a>
+          </div>
+        } @for (player of availablePlayers(); track player; let i = $index) {
+        <div class="
           flex items-center
         ">
           <input [id]="'player-' + player.id" type="checkbox" [formControlName]="i" class="
@@ -139,13 +141,16 @@
             {{ player.name }}
           </label>
         </div>
+      }
       </div>
-      <div *ngIf="involvedPlayersFormArray.invalid && (involvedPlayersFormArray.dirty || involvedPlayersFormArray.touched || isSubmitted)" class="
+      @if (involvedPlayersFormArray.invalid && (involvedPlayersFormArray.dirty || involvedPlayersFormArray.touched || isSubmitted)) {
+        <div class="
         mt-1.5
         text-xs text-red-600 dark:text-red-400
       ">
-        Prüfe die Anzahl der ausgewählten Spieler.
-      </div>
+          Prüfe die Anzahl der ausgewählten Spieler.
+        </div>
+      }
     </fieldset>
     <div class="
       pt-5

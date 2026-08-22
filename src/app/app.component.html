@@ -29,9 +29,9 @@
           <img src="icons/icon-144x144.png" alt="App Icon" class="h-6 w-6">
           <h1 class="text-lg font-semibold">Aufstellungstool</h1>
         </div>
-        <button
-          *ngIf="showInstallButton()"
-          (click)="installPWA()"
+        @if (showInstallButton()) {
+          <button
+            (click)="installPWA()"
           class="
                  ml-auto px-3 py-1
                  bg-white/20 hover:bg-white/30
@@ -39,9 +39,10 @@
                  rounded shadow
                  transition-colors
                 "
-        >
-          App installieren
-        </button>
+          >
+            App installieren
+          </button>
+        }
       </div>
     </header>
 

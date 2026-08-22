@@ -10,7 +10,7 @@ import {
   signal,
   WritableSignal
 } from '@angular/core';
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {isPlatformBrowser} from '@angular/common';
 import {Dialog, DialogModule} from '@angular/cdk/dialog';
 import {CdkDragDrop, CdkDragStart, DragDropModule} from '@angular/cdk/drag-drop';
 
@@ -55,7 +55,7 @@ const EDIT_MODE_STORAGE_KEY = 'lineup_edit_mode';
 @Component({
   selector: 'app-lineup-display',
   standalone: true,
-  imports: [CommonModule, DialogModule, DragDropModule],
+  imports: [DialogModule, DragDropModule],
   templateUrl: './lineup-display.component.html',
   styleUrls: ['./lineup-display.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

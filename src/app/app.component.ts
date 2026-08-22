@@ -1,6 +1,6 @@
-import {Component, inject, OnInit, PLATFORM_ID, signal, WritableSignal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit, PLATFORM_ID, signal, WritableSignal} from '@angular/core';
 import {RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {isPlatformBrowser} from '@angular/common';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -15,8 +15,9 @@ interface BeforeInstallPromptEvent extends Event {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {

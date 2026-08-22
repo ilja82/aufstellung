@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, inject, signal, Signal, WritableSignal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {PlayerService} from '../player.service';
 import {Player} from '../../../models/player.model';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -8,7 +8,7 @@ import {RouterModule} from '@angular/router';
 @Component({
   selector: 'app-player-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [ReactiveFormsModule, RouterModule],
   templateUrl: './player-list.component.html',
   styleUrls: ['./player-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
