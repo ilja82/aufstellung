@@ -2,10 +2,9 @@ import {inject, Injectable, PLATFORM_ID, signal, Signal, WritableSignal} from '@
 import {isPlatformBrowser} from '@angular/common';
 import {DoubleMatchesMode, Lineup, LineupSettings, LineupSlot, PositionType} from '../../models/lineup.model';
 import {PlayerService} from '../player/player.service';
-import {Player} from '../../models/player.model';
+import {generateLineupAssignment} from './lineup-scheduler';
 
 const LINEUP_STORAGE_KEY = 'current_lineup';
-const MAX_RANDOM_ASSIGNMENT_ATTEMPTS = 20;
 
 @Injectable({
   providedIn: 'root'
@@ -130,130 +129,29 @@ export class LineupService {
 
   public generateRandomAssignment(): void {
     const lineup = this.#currentLineup();
-    const allPlayersArray = this.playerService.players();
-    const playersMap = new Map<string, Player>();
-    allPlayersArray.forEach(p => playersMap.set(p.id, p));
-
     if (!lineup) {
       console.warn("Cannot generate: No current lineup.");
       return;
     }
 
     const involvedPlayerIds = new Set(lineup.settings.involvedPlayerIds);
-    const playerCount = involvedPlayerIds.size;
-    let assignmentSuccessful = false;
-    let attempt = 0;
-    let finalWorkingSlots: LineupSlot[] = lineup.slots.map((slot): LineupSlot => ({...slot, assignedPlayerId: null}));
-
-
-    let maxSetNumberToFill = lineup.slots.length;
-    if (playerCount === 2) {
-      maxSetNumberToFill = 6;
-    } else if (playerCount === 3) {
-      maxSetNumberToFill = 12;
-    }
-
-
-    while (attempt < MAX_RANDOM_ASSIGNMENT_ATTEMPTS && !assignmentSuccessful) {
-      attempt++;
-      let workingSlots: LineupSlot[] = lineup.slots.map((slot): LineupSlot => ({...slot, assignedPlayerId: null}));
-
-      const shuffledPlayers = allPlayersArray.filter(player => involvedPlayerIds.has(player.id));
-      this._shuffleArray(shuffledPlayers);
-      const playerCounts = new Map<Player, number>();
-      for (const player of shuffledPlayers) {
-        playerCounts.set(player, 0);
-      }
-
-      let slotsToCheckAssigned = false;
-      let innerLoopProtection = 0;
-      const maxInnerLoops = shuffledPlayers.length * workingSlots.length * 2;
-
-      while (!slotsToCheckAssigned && innerLoopProtection < maxInnerLoops) {
-        innerLoopProtection++;
-        let playersAssignedThisPass = 0;
-
-        const slotsToConsider = workingSlots.filter(slot => slot.setNumber <= maxSetNumberToFill);
-
-
-        for (const player of shuffledPlayers) {
-          let slotAssigned = false;
-          for (const slot of slotsToConsider) {
-            if (!slot.assignedPlayerId) {
-              if (slot.position === 'single' && player.likesSingles ||
-                slot.position === 'striker' && player.isStriker ||
-                slot.position === 'goalie' && player.isGoalie ||
-                slot.position === 'gw' && player.playsGoalieWar) {
-                if (this.isMoveEligible(workingSlots, slot.setNumber, undefined, player.id)) {
-                  const targetSlotInWorkingSlots = workingSlots.find(ws => ws.setNumber === slot.setNumber);
-                  if (targetSlotInWorkingSlots) targetSlotInWorkingSlots.assignedPlayerId = player.id;
-                  let setsToAdd = 1;
-                  if (slot.position === 'striker' || slot.position === 'goalie') {
-                    setsToAdd = 2;
-                  }
-                  playerCounts.set(player, (playerCounts.get(player) ?? 0) + setsToAdd);
-                  slotAssigned = true;
-                  playersAssignedThisPass++;
-                  break;
-                }
-              }
-            }
-          }
-          if (!slotAssigned) {
-            for (const slot of slotsToConsider) {
-              if (!slot.assignedPlayerId) {
-                if (this.isMoveEligible(workingSlots, slot.setNumber, undefined, player.id)) {
-                  const targetSlotInWorkingSlots = workingSlots.find(ws => ws.setNumber === slot.setNumber);
-                  if (targetSlotInWorkingSlots) targetSlotInWorkingSlots.assignedPlayerId = player.id;
-                  let setsToAdd = 1;
-                  if (slot.position === 'striker' || slot.position === 'goalie') {
-                    setsToAdd = 2;
-                  }
-                  playerCounts.set(player, (playerCounts.get(player) ?? 0) + setsToAdd);
-                  playersAssignedThisPass++;
-                  break;
-                }
-              }
-            }
-          }
-        }
-        shuffledPlayers.sort((a, b) => {
-          const countA = playerCounts.get(a) ?? 0;
-          const countB = playerCounts.get(b) ?? 0;
-          return countA - countB;
-        });
-
-        slotsToCheckAssigned = workingSlots
-          .filter(slot => slot.setNumber <= maxSetNumberToFill)
-          .every(slot => slot.assignedPlayerId !== null);
-
-
-        if (playersAssignedThisPass === 0 && !slotsToCheckAssigned) {
-          break;
-        }
-      }
-
-      finalWorkingSlots = workingSlots;
-
-      if (slotsToCheckAssigned) {
-        assignmentSuccessful = true;
-      }
-
-    }
+    const involvedPlayers = this.playerService.players().filter(player => involvedPlayerIds.has(player.id));
+    const {slots, report} = generateLineupAssignment(lineup.slots, involvedPlayers);
 
     this.#currentLineup.update(currentL => {
       if (!currentL) return null;
       return {
         ...currentL,
-        slots: finalWorkingSlots
+        slots: slots
       };
     });
     this._saveLineupToLocalStorage();
 
-    if (assignmentSuccessful) {
-      console.log(`Random assignment for relevant slots successful after ${attempt} attempts.`);
-    } else {
-      console.warn(`Could not fill all relevant slots (up to set ${maxSetNumberToFill}) after ${MAX_RANDOM_ASSIGNMENT_ATTEMPTS} attempts. Some slots may be empty.`);
+    if (report.emptySeats > 0) {
+      console.warn(`Generated lineup leaves ${report.emptySeats} slot(s) empty: the squad cannot staff every set.`);
+    }
+    if (report.backToBackAppearances > 0) {
+      console.warn(`Generated lineup makes ${report.backToBackAppearances} appearance(s) follow the previous set directly.`);
     }
   }
 
@@ -303,13 +201,6 @@ export class LineupService {
     slots.push(createSlot(15, 'striker'));
     slots.push(createSlot(16, 'goalie'));
     return slots;
-  }
-
-  private _shuffleArray(array: any[]): void {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
   }
 
   private _loadLineupFromLocalStorage(): void {
