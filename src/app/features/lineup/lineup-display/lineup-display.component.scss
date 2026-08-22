@@ -1,0 +1,239 @@
+:host {
+  /* "You have hold of this." Warm enough to survive on any generated player colour,
+     and reserved for that one state. */
+  --grip: #f5a300;
+  /* Hairlines bracketing the grip, so it still reads on pale and yellow players. */
+  --grip-shade: rgba(17, 24, 39, 0.55);
+  --grip-ring: 0 0 0 1px var(--grip-shade),
+  inset 0 0 0 2px var(--grip),
+  inset 0 0 0 3px var(--grip-shade);
+  --grip-ring-tight: 0 0 0 1px var(--grip-shade),
+  inset 0 0 0 4px var(--grip),
+  inset 0 0 0 5px var(--grip-shade);
+  /* Overwritten per element by the hold directive; kept in sync with cdkDragStartDelay. */
+  --grip-hold: 400ms;
+
+  /* "A player may land here." */
+  --open: #22c55e;
+  --open-tint: #dcfce7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --open: #4ade80;
+    --open-tint: rgba(20, 83, 45, 0.7);
+  }
+}
+
+/* ---------------------------------------------------------------- the slot
+   Where a player may land. Owns the drop feedback, nothing else. */
+
+.slot {
+  border-radius: 0.375rem;
+  transition: transform 120ms ease-out, opacity 120ms ease-out, filter 120ms ease-out;
+}
+
+/* Sets the player cannot take. Dimming the few is quieter than lighting up the many. */
+.slot--blocked {
+  opacity: 0.4;
+  filter: grayscale(100%);
+}
+
+/* The one set the player would land in - it holds the CDK placeholder. */
+.slot--open:has(> .cdk-drag-placeholder) {
+  background-color: var(--open-tint);
+  outline: 2px solid var(--open);
+  outline-offset: 2px;
+  transform: scale(1.04);
+}
+
+/* ---------------------------------------------------------------- the chip
+   The player you take hold of. Owns the grip. */
+
+.chip,
+.row-label {
+  position: relative;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 140ms ease-out;
+}
+
+.row-label {
+  display: inline-block;
+  border-radius: 4px;
+  /* Padding for the ring, pulled back out again so the label column keeps its width. */
+  padding: 2px 3px;
+  margin: -2px -3px;
+}
+
+.row-label--open {
+  background-color: var(--open-tint);
+  outline: 2px solid var(--open);
+  outline-offset: 1px;
+}
+
+.row-label--blocked {
+  opacity: 0.35;
+}
+
+/* The grip ring: wipes shut over the hold, then locks with a short pulse. */
+.chip::after,
+.row-label::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: var(--grip-ring);
+}
+
+/* Pressed - the chip gives a little under the finger. */
+.chip:active,
+.row-label:active,
+.hold-to-move.is-holding {
+  transform: scale(0.97);
+}
+
+.hold-to-move.is-holding::after {
+  animation: grip-close var(--grip-hold) linear forwards;
+}
+
+/* Held long enough: the grip closes, the chip springs back and lifts off the row. */
+.hold-to-move.is-gripped {
+  transform: scale(1);
+  box-shadow: 0 8px 18px -8px rgba(15, 23, 42, 0.65);
+}
+
+/* A cast shadow cannot lift anything off a dark background - a halo can. */
+@media (prefers-color-scheme: dark) {
+  .hold-to-move.is-gripped {
+    box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.9),
+    0 0 12px -3px rgba(245, 163, 0, 0.5);
+  }
+}
+
+.hold-to-move.is-gripped::after {
+  opacity: 1;
+  animation: grip-lock 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes grip-close {
+  from {
+    opacity: 1;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes grip-lock {
+  0% {
+    box-shadow: var(--grip-ring);
+  }
+  35% {
+    box-shadow: var(--grip-ring-tight);
+  }
+  100% {
+    box-shadow: var(--grip-ring);
+  }
+}
+
+/* ---------------------------------------------------------------- the hint
+   Shows the gesture in miniature until the first grip closes for real. */
+
+.hold-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hold-hint {
+    color: #9ca3af;
+  }
+}
+
+.hold-hint__mark {
+  position: relative;
+  flex: none;
+  width: 1.5rem;
+  height: 0.875rem;
+  border-radius: 3px;
+  background-color: rgba(148, 163, 184, 0.35);
+}
+
+.hold-hint__mark::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--grip-ring);
+  animation: grip-demo 2.2s linear infinite;
+}
+
+@keyframes grip-demo {
+  0%,
+  8% {
+    clip-path: inset(0 100% 0 0);
+  }
+  26%,
+  84% {
+    clip-path: inset(0 0 0 0);
+  }
+  94%,
+  100% {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+/* ------------------------------------------------------------ less motion
+   The grip is information, so it stays - it just fades in instead of sweeping. */
+
+@media (prefers-reduced-motion: reduce) {
+  .slot,
+  .chip,
+  .row-label {
+    transition: none;
+  }
+
+  .slot--open {
+    transform: none;
+  }
+
+  .chip:active,
+  .row-label:active,
+  .hold-to-move.is-gripped {
+    transform: none;
+  }
+
+  .hold-to-move.is-holding::after {
+    clip-path: inset(0 0 0 0);
+    animation: grip-fade var(--grip-hold) linear forwards;
+  }
+
+  .hold-to-move.is-gripped::after {
+    animation: none;
+  }
+
+  .hold-hint__mark::after {
+    animation: none;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes grip-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

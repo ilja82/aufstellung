@@ -21,29 +21,12 @@ body {
 }
 
 .cdk-drag-preview {
-  @apply shadow-xl rounded-md box-border;
+  @apply rounded box-border;
+  box-shadow: 0 12px 24px -8px rgba(15, 23, 42, 0.6);
 }
 
+/* The player is in the air, so their old seat is empty - and no row has to resize
+   to make space for a placeholder that nobody can see. */
 .cdk-drag-placeholder {
-  @apply bg-yellow-100 dark:bg-yellow-800 border-yellow-400 border-dashed opacity-50 transition-opacity duration-200;
-  min-height: 40px;
-}
-
-.eligible-drop-zone {
-  background-color: #dcfce7;
-  border: 2px solid #22c55e;
-  transform: scale(1.05);
-  transition: all 100ms ease-in-out;
-}
-
-@media (prefers-color-scheme: dark) {
-  .eligible-drop-zone {
-    background-color: rgba(20, 83, 45, 0.7);
-    border-color: #4ade80;
-  }
-}
-
-.ineligible-drop-zone {
-  opacity: 0.4;
-  filter: grayscale(100%);
+  display: none;
 }

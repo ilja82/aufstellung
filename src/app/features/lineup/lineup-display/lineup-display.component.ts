@@ -21,6 +21,7 @@ import {Lineup, LineupSlot, PositionType} from '../../../models/lineup.model';
 import {Player} from '../../../models/player.model';
 import {SavedLineup} from '../../../models/saved-lineup.model';
 import {PlayerSelectionData, PlayerSelectionModalComponent} from '../../shared/player-selection-modal/player-selection-modal.component';
+import {HOLD_TO_MOVE_MS, HoldToMoveDirective} from '../../shared/hold-to-move/hold-to-move.directive';
 
 interface BaseDisplayRow {
   rowKey: string;
@@ -51,11 +52,12 @@ interface DoubleDisplayRow extends BaseDisplayRow {
 type LineupDisplayRow = SingleDisplayRow | GoalieWarDisplayRow | DoubleDisplayRow;
 
 const EDIT_MODE_STORAGE_KEY = 'lineup_edit_mode';
+const HOLD_HINT_STORAGE_KEY = 'lineup_hold_hint_seen';
 
 @Component({
   selector: 'app-lineup-display',
   standalone: true,
-  imports: [DialogModule, DragDropModule],
+  imports: [DialogModule, DragDropModule, HoldToMoveDirective],
   templateUrl: './lineup-display.component.html',
   styleUrls: ['./lineup-display.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -72,6 +74,12 @@ export class LineupDisplayComponent implements OnInit {
   isEditModeEnabled: WritableSignal<boolean> = signal(true);
   draggedPlayerId: string | null = null;
   sourceSetNumber: number | undefined = undefined;
+  draggedRowKind: 'single' | 'double' | null = null;
+
+  /** Touch needs a deliberate hold so scrolling never moves anyone; the mouse stays immediate. */
+  readonly holdDelay = {touch: HOLD_TO_MOVE_MS, mouse: 0};
+  /** The hold is invisible until it is taught, so the hint retires itself after the first grip. */
+  showHoldHint: WritableSignal<boolean> = signal(false);
 
   currentLineup: Signal<Lineup | null> = this.lineupService.currentLineup;
   currentSavedLineup: Signal<SavedLineup | null> = this.savedLineupService.currentlyOpenLineup;
@@ -125,12 +133,30 @@ export class LineupDisplayComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadEditModeState();
+    this.loadHoldHintState();
   }
 
   private loadEditModeState(): void {
     if (isPlatformBrowser(this.platformId)) {
       const savedState = localStorage.getItem(EDIT_MODE_STORAGE_KEY);
       this.isEditModeEnabled.set(savedState === null || savedState === 'true');
+    }
+  }
+
+  private loadHoldHintState(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.showHoldHint.set(localStorage.getItem(HOLD_HINT_STORAGE_KEY) !== 'true');
+    }
+  }
+
+  /** Called once the user has taken hold of a player or a set - they know the gesture now. */
+  onHoldDiscovered(): void {
+    if (!this.showHoldHint()) {
+      return;
+    }
+    this.showHoldHint.set(false);
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(HOLD_HINT_STORAGE_KEY, 'true');
     }
   }
 
@@ -207,8 +233,29 @@ export class LineupDisplayComponent implements OnInit {
       this.isCurrentlyDragging = false;
       this.draggedPlayerId = null;
       this.sourceSetNumber = undefined;
+      this.draggedRowKind = null;
       this.changeDetectorRef.detectChanges();
     }, 0);
+  }
+
+  onRowDragStarted(row: LineupDisplayRow): void {
+    if (!this.isEditModeEnabled()) return;
+    this.draggedRowKind = row.type === 'double' ? 'double' : 'single';
+  }
+
+  /** Sets only swap with sets of the same shape - two singles, or two doubles. */
+  isRowSwapEligible(row: LineupDisplayRow): boolean {
+    if (!this.draggedRowKind) return false;
+    return (row.type === 'double' ? 'double' : 'single') === this.draggedRowKind;
+  }
+
+  isRowSwapBlocked(row: LineupDisplayRow): boolean {
+    return !!this.draggedRowKind && !this.isRowSwapEligible(row);
+  }
+
+  /** An empty slot names the position it is waiting for instead of pretending to hold a player. */
+  getSlotLabel(slot: LineupSlot | undefined, emptyLabel: string): string {
+    return slot?.assignedPlayerId ? this.getPlayerName(slot.assignedPlayerId) : emptyLabel;
   }
 
   isDropTargetEligible(targetSetNumber: number): boolean {
