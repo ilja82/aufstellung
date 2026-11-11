@@ -53,6 +53,7 @@ describe('SavedLineupService open lineup persistence', () => {
     const service = freshService();
     const a = service.saveLineup(lineup, 'A');
     service.setCurrentlyOpenLineup(a.id);
+    expect(localStorage.getItem(KEY)).toBe(a.id);
     service.setCurrentlyOpenLineup(null);
     expect(localStorage.getItem(KEY)).toBeNull();
   });
