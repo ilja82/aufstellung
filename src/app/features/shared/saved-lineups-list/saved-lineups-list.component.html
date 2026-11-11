@@ -92,7 +92,7 @@
             }
           </div>
           <div class="text-sm text-gray-600 dark:text-gray-400">
-            <div>Spieler: {{ getPlayerCount(savedLineup) }}</div>
+            <div>Spieler: {{ getPlayerNames(savedLineup) }}</div>
             <div>Modus: {{ getGameModeText(savedLineup) }}</div>
             <div>Erstellt: {{ formatDate(savedLineup.createdAt) }}</div>
             @if (savedLineup.updatedAt.getTime() !== savedLineup.createdAt.getTime()) {

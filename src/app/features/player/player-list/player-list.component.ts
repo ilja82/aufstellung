@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, inject, signal, Signal, WritableSign
 
 import {PlayerService} from '../player.service';
 import {Player} from '../../../models/player.model';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn} from '@angular/forms';
 import {RouterModule} from '@angular/router';
 
 @Component({
@@ -23,9 +23,25 @@ export class PlayerListComponent {
   players: Signal<Player[]> = this.playerService.players;
   playerCount: Signal<number> = this.playerService.playerCount;
 
+  /**
+   * Name must not be blank after trim and must not belong to another player.
+   * Reads the player id from the parent form so editing a player may keep its own name.
+   */
+  private readonly nameValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    const name: string = (control.value ?? '').toString();
+    if (!name.trim()) {
+      return {required: true};
+    }
+    const id: string | null | undefined = control.parent?.get('id')?.value;
+    if (this.playerService.isNameTaken(name, id || undefined)) {
+      return {duplicate: true};
+    }
+    return null;
+  };
+
   playerForm: FormGroup = this.fb.group({
     id: [''],
-    name: ['', Validators.required],
+    name: ['', this.nameValidator],
     isGoalie: [false],
     isStriker: [false],
     likesSingles: [false],
@@ -42,6 +58,7 @@ export class PlayerListComponent {
       const playerToEdit = this.playerService.getPlayerById(playerId);
       if (playerToEdit) {
         this.playerForm.patchValue(playerToEdit);
+        this.playerForm.controls['name'].updateValueAndValidity();
         this.editingState.set(playerId);
       }
     }
@@ -59,6 +76,7 @@ export class PlayerListComponent {
   }
 
   savePlayer(): void {
+    this.playerForm.controls['name'].updateValueAndValidity();
     if (this.playerForm.invalid) {
       this.playerForm.markAllAsTouched();
       return;
@@ -67,11 +85,19 @@ export class PlayerListComponent {
     const formValue = this.playerForm.getRawValue();
     const currentState = this.editingState();
 
+    let saved = false;
     if (currentState === 'add') {
       const {id, ...newPlayerData} = formValue;
-      this.playerService.addPlayer(newPlayerData);
+      saved = this.playerService.addPlayer(newPlayerData);
     } else if (currentState !== null) {
-      this.playerService.updatePlayer(formValue as Player);
+      saved = this.playerService.updatePlayer(formValue as Player);
+    }
+
+    if (!saved) {
+      // The service refused the name (e.g. taken in the meantime): keep the form open with the error.
+      this.playerForm.controls['name'].updateValueAndValidity();
+      this.playerForm.markAllAsTouched();
+      return;
     }
 
     this.editingState.set(null);
