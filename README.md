@@ -1,59 +1,42 @@
 # Aufstellung
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.7.
+An Angular PWA that builds and saves match lineups (German: *Aufstellung*).
+Players tick the positions they can play, and a scheduler generates the lineup.
 
-## Development server
+## Players and positions
 
-To start a local development server, run:
+Each player has a name and these flags: goalie, striker, likes singles,
+likes doubles, plays goalie war. Seats are single, goalie war (`gw`),
+goalie and striker. In the settings you choose the doubles mode (four or
+five matches), whether the goalie war is included, and which players take part.
 
-```bash
-ng serve
-```
+## Lineup rules
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- Each player plays at most 2 singles and 2 doubles.
+- The same doubles pair never plays twice.
+- Back-to-back games are avoided (soft rule).
+- Seats outside a player's preferred position are a last resort (soft rule).
 
-## Code scaffolding
+## Data storage
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+There is no backend. All data stays in the browser's `localStorage`:
 
-```bash
-ng generate component component-name
-```
+- `players`: the player list
+- `current_lineup`: the lineup being edited
+- `saved_lineups`: saved lineups
+- `lineup_edit_mode`: edit-mode flag
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Commands
 
-```bash
-ng generate --help
-```
+- `npm ci`: install the exact dependencies from the lockfile
+- `npm start`: run the dev server (`ng serve`)
+- `npm test`: run the unit tests (`ng test`, Vitest)
+- `npm run build`: build the app into `dist/aufstellung/browser`
 
-## Building
+## Deploy
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+`.github/workflows/deploy.yml` deploys to GitHub Pages on every push to
+`main` (and on manual dispatch). It runs `npm ci`, builds for production with
+`--base-href /<repo-name>/` taken from the repository name, adds `.nojekyll`,
+copies `index.html` to `404.html` and publishes the result. The app is a PWA
+using the Angular service worker (`ngsw-config.json`).
