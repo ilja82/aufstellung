@@ -112,7 +112,7 @@ export class SavedLineupService {
 
   public setCurrentlyOpenLineup(id: string | null): void {
     this.#currentlyOpenLineupId.set(id);
-    if (id) {
+    if (id !== null) {
       this._saveOpenLineupIdToLocalStorage(id);
     } else {
       this._removeOpenLineupIdFromLocalStorage();
@@ -154,26 +154,24 @@ export class SavedLineupService {
   }
 
   private _loadSavedLineupsFromLocalStorage(): void {
-    if (isPlatformBrowser(this.platformId)) {
+    this.#savedLineups.set([]);
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
       const savedData = localStorage.getItem(SAVED_LINEUPS_STORAGE_KEY);
-      if (savedData) {
-        try {
-          const parsedLineups: SavedLineup[] = JSON.parse(savedData).map((lineup: any) => ({
-            ...lineup,
-            createdAt: new Date(lineup.createdAt),
-            updatedAt: new Date(lineup.updatedAt)
-          }));
-          this.#savedLineups.set(parsedLineups);
-        } catch (e) {
-          console.error('Error parsing saved lineups from localStorage:', e);
-          localStorage.removeItem(SAVED_LINEUPS_STORAGE_KEY);
-          this.#savedLineups.set([]);
-        }
-      } else {
-        this.#savedLineups.set([]);
+      if (!savedData) return;
+      try {
+        const parsedLineups: SavedLineup[] = JSON.parse(savedData).map((lineup: any) => ({
+          ...lineup,
+          createdAt: new Date(lineup.createdAt),
+          updatedAt: new Date(lineup.updatedAt)
+        }));
+        this.#savedLineups.set(parsedLineups);
+      } catch (e) {
+        console.error('Error parsing saved lineups from localStorage:', e);
+        localStorage.removeItem(SAVED_LINEUPS_STORAGE_KEY);
       }
-    } else {
-      this.#savedLineups.set([]);
+    } catch (e) {
+      console.error('Error loading saved lineups from localStorage:', e);
     }
   }
 

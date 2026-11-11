@@ -91,4 +91,28 @@ describe('SavedLineupService open lineup persistence', () => {
     });
     expect(freshService().currentlyOpenLineupId()).toBeNull();
   });
+
+  it('writes an empty string id as given', () => {
+    const service = freshService();
+    service.setCurrentlyOpenLineup('');
+    expect(localStorage.getItem(KEY)).toBe('');
+  });
+
+  it('survives getItem throwing for every key', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('denied'); });
+    const service = freshService();
+    expect(service.savedLineups()).toEqual([]);
+    expect(service.currentlyOpenLineupId()).toBeNull();
+    expect(error).toHaveBeenCalled();
+  });
+
+  it('survives malformed saved data when removeItem throws', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    localStorage.setItem('saved_lineups', '{not json');
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { throw new Error('denied'); });
+    const service = freshService();
+    expect(service.savedLineups()).toEqual([]);
+    expect(error).toHaveBeenCalled();
+  });
 });
