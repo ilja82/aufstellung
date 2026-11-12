@@ -33,6 +33,22 @@ export class LineupService {
     this._saveLineupToLocalStorage();
   }
 
+  public loadLineup(lineup: Lineup): void {
+    const settings: LineupSettings = {
+      ...lineup.settings,
+      involvedPlayerIds: [...lineup.settings.involvedPlayerIds]
+    };
+    const playerColors = lineup.playerColors
+      ? {...lineup.playerColors}
+      : this._generatePlayerColors(settings.involvedPlayerIds);
+    this.#currentLineup.set({
+      settings: settings,
+      slots: lineup.slots.map(slot => ({...slot})),
+      playerColors: playerColors
+    });
+    this._saveLineupToLocalStorage();
+  }
+
   public assignPlayerToSlot(setNumber: number, playerId: string | null): void {
     this.#currentLineup.update(lineup => {
       if (!lineup) return null;
