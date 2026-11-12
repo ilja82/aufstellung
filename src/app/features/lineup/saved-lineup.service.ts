@@ -4,6 +4,7 @@ import {SavedLineup} from '../../models/saved-lineup.model';
 import {Lineup} from '../../models/lineup.model';
 
 const SAVED_LINEUPS_STORAGE_KEY = 'saved_lineups';
+const OPEN_LINEUP_ID_STORAGE_KEY = 'open_lineup_id';
 
 @Injectable({
   providedIn: 'root'
@@ -26,6 +27,7 @@ export class SavedLineupService {
 
   constructor() {
     this._loadSavedLineupsFromLocalStorage();
+    this._restoreOpenLineupId();
   }
 
   private _generateId(): string {
@@ -92,6 +94,7 @@ export class SavedLineupService {
 
     if (this.#currentlyOpenLineupId() === id) {
       this.#currentlyOpenLineupId.set(null);
+      this._removeOpenLineupIdFromLocalStorage();
     }
 
     this._saveSavedLineupsToLocalStorage();
@@ -109,29 +112,66 @@ export class SavedLineupService {
 
   public setCurrentlyOpenLineup(id: string | null): void {
     this.#currentlyOpenLineupId.set(id);
+    if (id !== null) {
+      this._saveOpenLineupIdToLocalStorage(id);
+    } else {
+      this._removeOpenLineupIdFromLocalStorage();
+    }
+  }
+
+  /** The stored id is only a hint: it is used only if a saved lineup has that id. */
+  private _restoreOpenLineupId(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      const storedId = localStorage.getItem(OPEN_LINEUP_ID_STORAGE_KEY);
+      if (storedId === null) return;
+      if (this.#savedLineups().some(lineup => lineup.id === storedId)) {
+        this.#currentlyOpenLineupId.set(storedId);
+      } else {
+        localStorage.removeItem(OPEN_LINEUP_ID_STORAGE_KEY);
+      }
+    } catch (e) {
+      console.error('Error restoring open lineup id from localStorage:', e);
+    }
+  }
+
+  private _saveOpenLineupIdToLocalStorage(id: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      localStorage.setItem(OPEN_LINEUP_ID_STORAGE_KEY, id);
+    } catch (e) {
+      console.error('Error saving open lineup id to localStorage:', e);
+    }
+  }
+
+  private _removeOpenLineupIdFromLocalStorage(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      localStorage.removeItem(OPEN_LINEUP_ID_STORAGE_KEY);
+    } catch (e) {
+      console.error('Error removing open lineup id from localStorage:', e);
+    }
   }
 
   private _loadSavedLineupsFromLocalStorage(): void {
-    if (isPlatformBrowser(this.platformId)) {
+    this.#savedLineups.set([]);
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
       const savedData = localStorage.getItem(SAVED_LINEUPS_STORAGE_KEY);
-      if (savedData) {
-        try {
-          const parsedLineups: SavedLineup[] = JSON.parse(savedData).map((lineup: any) => ({
-            ...lineup,
-            createdAt: new Date(lineup.createdAt),
-            updatedAt: new Date(lineup.updatedAt)
-          }));
-          this.#savedLineups.set(parsedLineups);
-        } catch (e) {
-          console.error('Error parsing saved lineups from localStorage:', e);
-          localStorage.removeItem(SAVED_LINEUPS_STORAGE_KEY);
-          this.#savedLineups.set([]);
-        }
-      } else {
-        this.#savedLineups.set([]);
+      if (!savedData) return;
+      try {
+        const parsedLineups: SavedLineup[] = JSON.parse(savedData).map((lineup: any) => ({
+          ...lineup,
+          createdAt: new Date(lineup.createdAt),
+          updatedAt: new Date(lineup.updatedAt)
+        }));
+        this.#savedLineups.set(parsedLineups);
+      } catch (e) {
+        console.error('Error parsing saved lineups from localStorage:', e);
+        localStorage.removeItem(SAVED_LINEUPS_STORAGE_KEY);
       }
-    } else {
-      this.#savedLineups.set([]);
+    } catch (e) {
+      console.error('Error loading saved lineups from localStorage:', e);
     }
   }
 
