@@ -3,6 +3,7 @@ import {isPlatformBrowser} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 import {SavedLineupService} from '../../lineup/saved-lineup.service';
 import {LineupService} from '../../lineup/lineup.service';
+import {PlayerService} from '../../player/player.service';
 import {SavedLineup} from '../../../models/saved-lineup.model';
 
 @Component({
@@ -15,6 +16,7 @@ import {SavedLineup} from '../../../models/saved-lineup.model';
 export class SavedLineupsListComponent {
   private readonly savedLineupService = inject(SavedLineupService);
   private readonly lineupService = inject(LineupService);
+  private readonly playerService = inject(PlayerService);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
 
@@ -48,8 +50,11 @@ export class SavedLineupsListComponent {
     }).format(date);
   }
 
-  getPlayerCount(savedLineup: SavedLineup): string {
-    return savedLineup.lineup.settings.involvedPlayerIds.join(", ");
+  /** Current player names for the lineup; falls back to the stored id when the player no longer exists. */
+  getPlayerNames(savedLineup: SavedLineup): string {
+    return savedLineup.lineup.settings.involvedPlayerIds
+      .map(id => this.playerService.getPlayerById(id)?.name ?? id)
+      .join(", ");
   }
 
   getGameModeText(savedLineup: SavedLineup): string {

@@ -49,13 +49,19 @@ export class PlayerService {
     }
   }
 
-  addPlayer(newPlayer: Omit<Player, 'id'>): void {
+  addPlayer(newPlayer: Omit<Player, 'id'>): boolean {
+    const name = newPlayer.name?.trim() ?? '';
+    if (!name || this.isNameTaken(name)) {
+      return false;
+    }
     const playerWithId: Player = {
       ...newPlayer,
-      id: newPlayer.name
+      name,
+      id: this._generateUniqueId(name)
     };
     this.#players.update(currentPlayers => [...currentPlayers, playerWithId]);
     this._savePlayersToLocalStorage();
+    return true;
   }
 
   removePlayer(playerId: string): void {
@@ -63,15 +69,43 @@ export class PlayerService {
     this._savePlayersToLocalStorage();
   }
 
-  updatePlayer(updatedPlayer: Player): void {
+  updatePlayer(updatedPlayer: Player): boolean {
+    const name = updatedPlayer.name?.trim() ?? '';
+    if (!name || this.isNameTaken(name, updatedPlayer.id)) {
+      return false;
+    }
+    const playerToSave: Player = {...updatedPlayer, name};
     this.#players.update(currentPlayers =>
-      currentPlayers.map(p => p.id === updatedPlayer.id ? updatedPlayer : p)
+      currentPlayers.map(p => p.id === updatedPlayer.id ? playerToSave : p)
     );
     this._savePlayersToLocalStorage();
+    return true;
+  }
+
+  /**
+   * True when another player (not the one with `excludeId`) already has this name.
+   * Names are compared trimmed and case-insensitively.
+   */
+  isNameTaken(name: string, excludeId?: string): boolean {
+    const normalized = this._normalizeName(name);
+    return this.#players().some(p =>
+      p.id !== excludeId && this._normalizeName(p.name) === normalized
+    );
   }
 
   getPlayerById(id: string): Player | undefined {
     return this.#players().find(p => p.id === id);
   }
 
+  private _normalizeName(name: string | null | undefined): string {
+    return (name ?? '').trim().toLowerCase();
+  }
+
+  private _generateUniqueId(name: string): string {
+    let id: string;
+    do {
+      id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    } while (id === name || this.#players().some(p => p.id === id));
+    return id;
+  }
 }

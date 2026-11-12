@@ -36,7 +36,11 @@
                 @if (playerForm.controls['name'].invalid && (playerForm.controls['name'].dirty || playerForm.controls['name'].touched)) {
                   <div
                     class="mt-1 text-xs text-red-600 dark:text-red-400">
-                    Name wird benötigt.
+                    @if (playerForm.controls['name'].hasError('duplicate')) {
+                      Ein Spieler mit diesem Namen existiert bereits.
+                    } @else {
+                      Name wird benötigt.
+                    }
                   </div>
                 }
               </div>
@@ -139,7 +143,11 @@
               @if (playerForm.controls['name'].invalid && (playerForm.controls['name'].dirty || playerForm.controls['name'].touched)) {
                 <div
                   class="mt-1 text-xs text-red-600 dark:text-red-400">
-                  Name wird benötigt.
+                  @if (playerForm.controls['name'].hasError('duplicate')) {
+                    Ein Spieler mit diesem Namen existiert bereits.
+                  } @else {
+                    Name wird benötigt.
+                  }
                 </div>
               }
             </div>
