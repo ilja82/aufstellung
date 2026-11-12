@@ -1,7 +1,7 @@
-import {beforeEach, describe, expect, it} from 'vitest';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {PLATFORM_ID} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
-import {LineupSlot, PositionType} from '../../models/lineup.model';
+import {Lineup, LineupSlot, PositionType} from '../../models/lineup.model';
 import {PlayerService} from '../player/player.service';
 import {LineupService} from './lineup.service';
 
@@ -180,3 +180,61 @@ describe('LineupService.isMoveEligible', () => {
     expect(slots).toEqual(before);
   });
 });
+
+function makeLineup(withColors: boolean): Lineup {
+  const slots = Array.from({length: 16}, (_, i) => ({
+    setNumber: i + 1,
+    position: 'single' as const,
+    assignedPlayerId: i === 0 ? 'a' : null
+  }));
+  return {
+    settings: {doubleMatchesMode: 'four', includeGoalieWar: false, involvedPlayerIds: ['a', 'b', 'c']},
+    slots,
+    ...(withColors ? {playerColors: {a: 'hsl(1, 70%, 40%)', b: 'hsl(2, 70%, 40%)', c: 'hsl(3, 70%, 40%)'}} : {})
+  };
+}
+
+describe('LineupService.loadLineup', () => {
+  let service: LineupService;
+
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(LineupService);
+  });
+
+  it('keeps colours and slots', () => {
+    const input = makeLineup(true);
+    service.loadLineup(input);
+    expect(service.currentLineup()).toEqual(input);
+  });
+
+  it('saves to localStorage exactly once with the same colours', () => {
+    const input = makeLineup(true);
+    const spy = vi.spyOn(Storage.prototype, 'setItem');
+    service.loadLineup(input);
+    const calls = spy.mock.calls.filter(c => c[0] === 'current_lineup');
+    expect(calls.length).toBe(1);
+    expect(JSON.parse(calls[0][1]).playerColors).toEqual(input.playerColors);
+    spy.mockRestore();
+  });
+
+  it('generates colours for every player when missing', () => {
+    service.loadLineup(makeLineup(false));
+    const colors = service.currentLineup()!.playerColors!;
+    expect(Object.keys(colors).sort()).toEqual(['a', 'b', 'c']);
+  });
+
+  it('gives identical colours when loaded twice and does not mutate the input', () => {
+    const input = makeLineup(true);
+    const snapshot = structuredClone(input);
+    service.loadLineup(input);
+    const first = service.currentLineup()!.playerColors;
+    service.assignPlayerToSlot(2, 'b');
+    service.loadLineup(input);
+    expect(service.currentLineup()!.playerColors).toEqual(first);
+    service.assignPlayerToSlot(3, 'c');
+    expect(input).toEqual(snapshot);
+  });
+});
+

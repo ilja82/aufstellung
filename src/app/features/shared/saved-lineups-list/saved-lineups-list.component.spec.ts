@@ -1,8 +1,10 @@
-import {beforeEach, describe, expect, it} from 'vitest';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {TestBed} from '@angular/core/testing';
-import {PLATFORM_ID} from '@angular/core';
-import {provideRouter} from '@angular/router';
+import {PLATFORM_ID, signal} from '@angular/core';
+import {provideRouter, Router} from '@angular/router';
 import {SavedLineupsListComponent} from './saved-lineups-list.component';
+import {LineupService} from '../../lineup/lineup.service';
+import {SavedLineupService} from '../../lineup/saved-lineup.service';
 import {PlayerService} from '../../player/player.service';
 import {SavedLineup} from '../../../models/saved-lineup.model';
 import {Player} from '../../../models/player.model';
@@ -53,3 +55,39 @@ describe('SavedLineupsListComponent.getPlayerNames', () => {
     expect(component.getPlayerNames(savedLineup(['Gone', 'p2']))).toBe('Gone, Ben');
   });
 });
+
+describe('SavedLineupsListComponent.openLineup', () => {
+  it('loads the saved lineup instead of starting a new one', () => {
+    const lineupService = {loadLineup: vi.fn(), startNewLineup: vi.fn(), assignPlayerToSlot: vi.fn()};
+    const savedLineupService = {
+      savedLineups: signal([]),
+      savedLineupsCount: signal(0),
+      currentlyOpenLineupId: signal(null),
+      setCurrentlyOpenLineup: vi.fn()
+    };
+    const router = {navigate: vi.fn().mockResolvedValue(true)};
+    TestBed.configureTestingModule({
+      providers: [
+        {provide: LineupService, useValue: lineupService},
+        {provide: SavedLineupService, useValue: savedLineupService},
+        {provide: Router, useValue: router}
+      ]
+    });
+    const component = TestBed.runInInjectionContext(() => new SavedLineupsListComponent());
+    const saved: SavedLineup = {
+      id: 'x', name: 'n', createdAt: new Date(), updatedAt: new Date(),
+      lineup: {
+        settings: {doubleMatchesMode: 'four', includeGoalieWar: false, involvedPlayerIds: ['a']},
+        slots: [{setNumber: 1, position: 'single', assignedPlayerId: 'a'}],
+        playerColors: {a: 'hsl(1, 70%, 40%)'}
+      }
+    };
+    component.openLineup(saved);
+    expect(lineupService.loadLineup).toHaveBeenCalledWith(saved.lineup);
+    expect(lineupService.startNewLineup).not.toHaveBeenCalled();
+    expect(lineupService.assignPlayerToSlot).not.toHaveBeenCalled();
+    expect(savedLineupService.setCurrentlyOpenLineup).toHaveBeenCalledWith('x');
+    expect(router.navigate).toHaveBeenCalledWith(['/lineup']);
+  });
+});
+

@@ -67,11 +67,7 @@ export class SavedLineupsListComponent {
   }
 
   openLineup(savedLineup: SavedLineup): void {
-    this.lineupService.startNewLineup(savedLineup.lineup.settings);
-
-    savedLineup.lineup.slots.forEach(slot => {
-      this.lineupService.assignPlayerToSlot(slot.setNumber, slot.assignedPlayerId);
-    });
+    this.lineupService.loadLineup(savedLineup.lineup);
 
     this.savedLineupService.setCurrentlyOpenLineup(savedLineup.id);
 
