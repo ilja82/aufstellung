@@ -1,8 +1,7 @@
-<<<<<<< 6dfe753f6753b6668a27c94c4273cc95ff9114aa
-import {beforeEach, describe, expect, it} from 'vitest';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {PLATFORM_ID} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
-import {LineupSlot, PositionType} from '../../models/lineup.model';
+import {Lineup, LineupSlot, PositionType} from '../../models/lineup.model';
 import {PlayerService} from '../player/player.service';
 import {LineupService} from './lineup.service';
 
@@ -179,11 +178,8 @@ describe('LineupService.isMoveEligible', () => {
     service.isMoveEligible(slots, 13, 3);
     service.isMoveEligible(slots, 2, undefined, 'A');
     expect(slots).toEqual(before);
-=======
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {TestBed} from '@angular/core/testing';
-import {LineupService} from './lineup.service';
-import {Lineup} from '../../models/lineup.model';
+  });
+});
 
 function makeLineup(withColors: boolean): Lineup {
   const slots = Array.from({length: 16}, (_, i) => ({
@@ -239,6 +235,6 @@ describe('LineupService.loadLineup', () => {
     expect(service.currentLineup()!.playerColors).toEqual(first);
     service.assignPlayerToSlot(3, 'c');
     expect(input).toEqual(snapshot);
->>>>>>> c4f7a6170061031a22eb0efc9e48d5a50f4fed8e
   });
 });
+

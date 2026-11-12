@@ -1,9 +1,10 @@
-<<<<<<< 6dfe753f6753b6668a27c94c4273cc95ff9114aa
-import {beforeEach, describe, expect, it} from 'vitest';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {TestBed} from '@angular/core/testing';
-import {PLATFORM_ID} from '@angular/core';
-import {provideRouter} from '@angular/router';
+import {PLATFORM_ID, signal} from '@angular/core';
+import {provideRouter, Router} from '@angular/router';
 import {SavedLineupsListComponent} from './saved-lineups-list.component';
+import {LineupService} from '../../lineup/lineup.service';
+import {SavedLineupService} from '../../lineup/saved-lineup.service';
 import {PlayerService} from '../../player/player.service';
 import {SavedLineup} from '../../../models/saved-lineup.model';
 import {Player} from '../../../models/player.model';
@@ -52,15 +53,8 @@ describe('SavedLineupsListComponent.getPlayerNames', () => {
 
   it('falls back to the stored id for a player that no longer exists', () => {
     expect(component.getPlayerNames(savedLineup(['Gone', 'p2']))).toBe('Gone, Ben');
-=======
-import {describe, expect, it, vi} from 'vitest';
-import {TestBed} from '@angular/core/testing';
-import {Router} from '@angular/router';
-import {signal} from '@angular/core';
-import {SavedLineupsListComponent} from './saved-lineups-list.component';
-import {SavedLineupService} from '../../lineup/saved-lineup.service';
-import {LineupService} from '../../lineup/lineup.service';
-import {SavedLineup} from '../../../models/saved-lineup.model';
+  });
+});
 
 describe('SavedLineupsListComponent.openLineup', () => {
   it('loads the saved lineup instead of starting a new one', () => {
@@ -94,6 +88,6 @@ describe('SavedLineupsListComponent.openLineup', () => {
     expect(lineupService.assignPlayerToSlot).not.toHaveBeenCalled();
     expect(savedLineupService.setCurrentlyOpenLineup).toHaveBeenCalledWith('x');
     expect(router.navigate).toHaveBeenCalledWith(['/lineup']);
->>>>>>> c4f7a6170061031a22eb0efc9e48d5a50f4fed8e
   });
 });
+
